@@ -44,8 +44,15 @@ router.get('/', verifyToken, async(req, res) => { // must be logged-in to see li
 router.get('/:hootId', verifyToken, async (req, res) => {
     try {
         const hoot = await Hoot.findById(req.params.hootId).populate('author');
+        if(!hoot) {
+            res.status(404);
+            throw new Erro('We cannoot find this hoot, please select another hoot from the list')
+        }
         res.status(200).json(hoot);
     } catch (err) {
+        if (res.status === 404) {
+
+        }
         res.status(500).json({ err: err.message });
     }
 })
@@ -79,8 +86,16 @@ router.put('/:hootId', verifyToken, async(req, res) => {
 })
 // DELETE	deleteHoot	200	/hoots/:hootId	Delete a hoot
 router.delete('/:hootId', verifyToken, async(req, res) => {
-    
+    const hoot = await Hoot.findById(req.params.hootId);
+
+    if(!hoot.author.equals(req.user._id)) {
+        return res.status(403).json('You are not allowed to do that!');
+    }
+
+    const deleteHoot = await Hoot.findByIdAndDelete(req.params.hootId);
+    res.status(200).json(deleteHoot)
 })
+
 // POST	createComment	200	/hoots/:hootId/comments	Create a comment
 
 
